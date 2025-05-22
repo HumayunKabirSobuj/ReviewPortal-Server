@@ -1,0 +1,106 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id         String     @id @default(uuid())
+  name       String
+  email      String     @unique
+  password   String
+  profileUrl String?
+  status     UserStatus @default(ACTIVE)
+  role       UserRole   @default(USER)
+  reviews    Review[]
+  comments   Comment[]
+  votes      Vote[]
+  payments   Payment[]
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+}
+
+model Category {
+  id      String   @id @default(uuid())
+  name    String   @unique
+  reviews Review[]
+}
+
+model Review {
+  id             String    @id @default(uuid())
+  title          String
+  description    String
+  rating         Int
+  purchaseSource String?
+  imageUrls        String[]   // optional image array
+  excerp         String
+  isPremium      Boolean   @default(false)
+  price          Float? // only for premium reviews
+  isPublished    Boolean   @default(false)
+  author         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId         String
+  category       Category  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  categoryId     String
+  comments       Comment[]
+  votes          Vote[]
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  Payment        Payment[]
+}
+
+model Comment {
+  id        String   @id @default(uuid())
+  content   String
+  author    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  review    Review   @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  reviewId  String
+  createdAt DateTime @default(now())
+}
+
+model Vote {
+  id       String   @id @default(uuid())
+  type     VoteType
+  author   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId   String
+  review   Review   @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  reviewId String
+
+  @@unique([userId, reviewId])
+}
+
+enum VoteType {
+  UP
+  DOWN
+}
+
+model Payment {
+  id        String        @id @default(uuid())
+  author    User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  review    Review        @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  reviewId  String
+  amount    Float
+  status    PaymentStatus
+  createdAt DateTime      @default(now())
+}
+
+enum PaymentStatus {
+  SUCCESS
+  FAILED
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  BLOCKED
+  DELETED
+}
