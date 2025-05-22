@@ -147,6 +147,7 @@ const getAllReview = (params, options) => __awaiter(void 0, void 0, void 0, func
                     },
                 },
             },
+            Discount: true,
         },
     });
     return result;
@@ -206,6 +207,7 @@ const getSingleReview = (id) => __awaiter(void 0, void 0, void 0, function* () {
                     },
                 },
             },
+            Discount: true,
         },
     });
     const paymentCount = yield prisma_1.default.payment.count({
@@ -340,6 +342,71 @@ const deleteReview = (id) => __awaiter(void 0, void 0, void 0, function* () {
     });
     return result;
 });
+// const discountReview = async (userId: string, data: Discount) => {
+//   const PremiumReviews = await prisma.review.findMany({
+//     where: {
+//       userId,
+//       isPremium: true,
+//       isPublished: true,
+//     },
+//   });
+//   const isReviewFind = PremiumReviews.find(
+//     (review: Review) => review.id === data.reviewId
+//   );
+//   if (!isReviewFind) {
+//     throw new AppError(status.NOT_FOUND, "Review not found!");
+//   }
+//   const disCountData = {
+//     ...data,
+//     newPrice:
+//       (isReviewFind.price as number) -
+//       ((isReviewFind.price as number) * data.percent) / 100,
+//   };
+//   // console.log(disCountData);
+//   const isDiscountAlreadyExist = await prisma.discount.findUnique({
+//     where: {
+//       reviewId: data.reviewId,
+//     },
+//   });
+//   // console.log(isDiscountAlreadyExist);
+//   if (isDiscountAlreadyExist) {
+//     throw new AppError(500, "Discount Already Exist");
+//   }
+//   const result = await prisma.discount.create({
+//     data: disCountData,
+//   });
+//   return result;
+// };
+const discountReview = (userId, data) => __awaiter(void 0, void 0, void 0, function* () {
+    return yield prisma_1.default.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
+        const PremiumReviews = yield tx.review.findMany({
+            where: {
+                userId,
+                isPremium: true,
+                isPublished: true,
+            },
+        });
+        // console.log(PremiumReviews);
+        const isReviewFind = PremiumReviews.find((review) => review.id === data.reviewId);
+        if (!isReviewFind) {
+            throw new AppError_1.default(http_status_1.default.NOT_FOUND, "Review not found!");
+        }
+        const isDiscountAlreadyExist = yield tx.discount.findUnique({
+            where: {
+                reviewId: data.reviewId,
+            },
+        });
+        if (isDiscountAlreadyExist) {
+            throw new AppError_1.default(500, "Discount Already Exist");
+        }
+        const disCountData = Object.assign(Object.assign({}, data), { newPrice: isReviewFind.price -
+                (isReviewFind.price * data.percent) / 100 });
+        const result = yield tx.discount.create({
+            data: disCountData,
+        });
+        return result;
+    }));
+});
 exports.ReviewService = {
     addReview,
     getAllReview,
@@ -349,4 +416,5 @@ exports.ReviewService = {
     makeReviewPublished,
     updateReview,
     deleteReview,
+    discountReview,
 };

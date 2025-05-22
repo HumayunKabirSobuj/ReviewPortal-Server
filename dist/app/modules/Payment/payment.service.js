@@ -21,14 +21,29 @@ const config_1 = __importDefault(require("../../../config"));
 const uuid_1 = require("uuid");
 const client_1 = require("@prisma/client");
 const makeOrder = (res, userId, reviewId) => __awaiter(void 0, void 0, void 0, function* () {
-    //   console.log({ userId, reviewId });
+    // console.log({ userId, reviewId });
+    let total_amount;
     const isReviewExist = yield prisma_1.default.review.findFirst({
         where: {
             id: reviewId,
+            isPremium: true,
         },
     });
     if (!isReviewExist) {
         throw new AppError_1.default(http_status_1.default.NOT_FOUND, "Review not found!");
+    }
+    // console.log(isReviewExist);
+    const isDiscountExist = yield prisma_1.default.discount.findUnique({
+        where: {
+            reviewId: isReviewExist.id,
+        },
+    });
+    // console.log(isDiscountExist);
+    if (isDiscountExist) {
+        total_amount = String(isDiscountExist.newPrice);
+    }
+    else {
+        total_amount = String(isReviewExist.price);
     }
     const store_id = config_1.default.store_id;
     const store_passwd = config_1.default.store_pass;
@@ -37,7 +52,7 @@ const makeOrder = (res, userId, reviewId) => __awaiter(void 0, void 0, void 0, f
     const tran_id = (0, uuid_1.v4)(); // ✅ tran_id generated using UUID
     //   console.log(tran_id);
     const data = {
-        total_amount: String(isReviewExist.price),
+        total_amount,
         currency: "BDT",
         tran_id: tran_id, // use unique tran_id for each api call
         success_url: `${config_1.default.backend_api_link}/api/payment/success?userId=${userId}&reviewId=${isReviewExist === null || isReviewExist === void 0 ? void 0 : isReviewExist.id}`,
@@ -66,8 +81,6 @@ const makeOrder = (res, userId, reviewId) => __awaiter(void 0, void 0, void 0, f
         ship_postcode: 1000,
         ship_country: "Bangladesh",
     };
-    //   console.log(isReviewExist);
-    // console.log(data);
     const sslcz = new sslcommerz_lts_1.default(store_id, store_passwd, is_live);
     try {
         const apiResponse = yield sslcz.init(data); // Use await here
@@ -201,5 +214,5 @@ exports.PaymentService = {
     successOrder,
     myPayments,
     adminDashboardInfo,
-    userDashboardInfo
+    userDashboardInfo,
 };

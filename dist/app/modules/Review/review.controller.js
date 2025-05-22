@@ -112,6 +112,15 @@ const deleteReview = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, v
         data: result,
     });
 }));
+const discountReview = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const result = yield review_service_1.ReviewService.discountReview(req.user.id, req.body);
+    (0, sendResponse_1.default)(res, {
+        statusCode: http_status_1.default.OK,
+        success: true,
+        message: "Discount Added Successfuly.",
+        data: result,
+    });
+}));
 exports.reviewController = {
     addReview,
     getAllReview,
@@ -120,5 +129,6 @@ exports.reviewController = {
     pendingReviews,
     makeReviewPublished,
     updateReview,
-    deleteReview
+    deleteReview,
+    discountReview
 };

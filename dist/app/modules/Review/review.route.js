@@ -15,6 +15,7 @@ router.get("/pending-reviews", (0, RoleValidation_1.default)(client_1.UserRole.A
 router.get("/:id", (0, RoleValidation_1.default)(client_1.UserRole.ADMIN, client_1.UserRole.USER), review_controller_1.reviewController.getSingleReview);
 router.get("/my-reviews", (0, RoleValidation_1.default)(client_1.UserRole.ADMIN, client_1.UserRole.USER), review_controller_1.reviewController.myselfAllReviews);
 router.post("/create-review", (0, RoleValidation_1.default)(client_1.UserRole.ADMIN, client_1.UserRole.USER), review_controller_1.reviewController.addReview);
+router.post("/dicount-review", (0, RoleValidation_1.default)(client_1.UserRole.USER), review_controller_1.reviewController.discountReview);
 router.patch("/make-review-published/:id", (0, RoleValidation_1.default)(client_1.UserRole.ADMIN), review_controller_1.reviewController.makeReviewPublished);
 router.patch("/update-review/:id", (0, RoleValidation_1.default)(client_1.UserRole.USER), review_controller_1.reviewController.updateReview);
 router.delete("/delete-review/:id", (0, RoleValidation_1.default)(client_1.UserRole.USER, client_1.UserRole.ADMIN), review_controller_1.reviewController.deleteReview);
