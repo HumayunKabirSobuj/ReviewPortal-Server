@@ -237,7 +237,7 @@ https://review-portal-b4-02-server.vercel.app
 1. Clone repository
 
 ```
-Clone Repository : https://github.com/HumayunKabirSobuj/ReviewHub-Server.git
+Clone Repository : https://github.com/HumayunKabirSobuj/ReviewPortal-Server.git
 ```
 
 2. cd ReviewHub-Server
