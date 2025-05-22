@@ -97,6 +97,15 @@ const deleteReview = catchAsync(async (req, res) => {
     data: result,
   });
 });
+const discountReview = catchAsync(async (req:Request & { user?: any }, res) => {
+  const result = await ReviewService.discountReview(req.user.id, req.body);
+  sendResponse(res, {
+    statusCode: status.OK,
+    success: true,
+    message: "Discount Added Successfuly.",
+    data: result,
+  });
+});
 export const reviewController = {
   addReview,
   getAllReview,
@@ -105,5 +114,6 @@ export const reviewController = {
   pendingReviews,
   makeReviewPublished,
   updateReview,
-  deleteReview
+  deleteReview,
+  discountReview
 };

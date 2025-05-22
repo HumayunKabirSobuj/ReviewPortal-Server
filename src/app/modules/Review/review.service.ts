@@ -1,4 +1,4 @@
-import { Review } from "@prisma/client";
+import { Discount, Review } from "@prisma/client";
 import prisma from "../../../shared/prisma";
 import AppError from "../../Errors/AppError";
 import status from "http-status";
@@ -70,7 +70,7 @@ const getAllReview = async (params: any, options: any) => {
     andConditions.push({ isPublished: false });
   } else if (options.isPublished === "true") {
     andConditions.push({ isPublished: true });
-  }else{
+  } else {
     andConditions = andConditions.filter(
       (condition) => !("isPublished" in condition)
     );
@@ -78,19 +78,17 @@ const getAllReview = async (params: any, options: any) => {
 
   // Remove isPublished condition if empty string
 
-
   // Premium / Free
   if (options.isPaid === "true") {
     andConditions.push({ isPremium: true });
   } else if (options.isPaid === "false") {
     andConditions.push({ isPremium: false });
-  }else{
+  } else {
     andConditions = andConditions.filter(
       (condition) => !("isPremium" in condition)
     );
   }
 
-  
   // Category filter
   if (options.categoryId?.trim()) {
     andConditions.push({ categoryId: options.categoryId });
@@ -378,6 +376,97 @@ const deleteReview = async (id: string) => {
   return result;
 };
 
+// const discountReview = async (userId: string, data: Discount) => {
+//   const PremiumReviews = await prisma.review.findMany({
+//     where: {
+//       userId,
+//       isPremium: true,
+//       isPublished: true,
+//     },
+//   });
+
+//   const isReviewFind = PremiumReviews.find(
+//     (review: Review) => review.id === data.reviewId
+//   );
+
+//   if (!isReviewFind) {
+//     throw new AppError(status.NOT_FOUND, "Review not found!");
+//   }
+
+//   const disCountData = {
+//     ...data,
+//     newPrice:
+//       (isReviewFind.price as number) -
+//       ((isReviewFind.price as number) * data.percent) / 100,
+//   };
+
+//   // console.log(disCountData);
+
+//   const isDiscountAlreadyExist = await prisma.discount.findUnique({
+//     where: {
+//       reviewId: data.reviewId,
+//     },
+//   });
+
+//   // console.log(isDiscountAlreadyExist);
+
+//   if (isDiscountAlreadyExist) {
+//     throw new AppError(500, "Discount Already Exist");
+//   }
+
+//   const result = await prisma.discount.create({
+//     data: disCountData,
+//   });
+//   return result;
+// };
+
+const discountReview = async (userId: string, data: Discount) => {
+  return await prisma.$transaction(async (tx) => {
+    const PremiumReviews = await tx.review.findMany({
+      where: {
+        userId,
+        isPremium: true,
+        isPublished: true,
+      },
+    });
+
+    // console.log(PremiumReviews);
+
+    const isReviewFind = PremiumReviews.find(
+      (review: Review) => review.id === data.reviewId
+    );
+
+    if (!isReviewFind) {
+      throw new AppError(status.NOT_FOUND, "Review not found!");
+    }
+
+    const isDiscountAlreadyExist = await tx.discount.findUnique({
+      where: {
+        reviewId: data.reviewId,
+      },
+    });
+
+    if (isDiscountAlreadyExist) {
+      throw new AppError(500, "Discount Already Exist");
+    }
+
+    const disCountData = {
+      ...data,
+      newPrice:
+        (isReviewFind.price as number) -
+        ((isReviewFind.price as number) * data.percent) / 100,
+    };
+
+    const result = await tx.discount.create({
+      data: disCountData,
+    });
+
+    return result;
+  });
+};
+
+
+
 export const ReviewService = {
   addReview,
   getAllReview,
@@ -387,4 +476,5 @@ export const ReviewService = {
   makeReviewPublished,
   updateReview,
   deleteReview,
+  discountReview,
 };

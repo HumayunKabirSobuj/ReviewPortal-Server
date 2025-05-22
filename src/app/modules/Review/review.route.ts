@@ -35,6 +35,12 @@ router.post(
   reviewController.addReview
 );
 
+router.post(
+  "/dicount-review",
+  RoleValidation( UserRole.USER),
+  reviewController.discountReview
+);
+
 router.patch(
   "/make-review-published/:id",
   RoleValidation(UserRole.ADMIN),
