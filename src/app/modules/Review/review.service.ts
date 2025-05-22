@@ -153,6 +153,7 @@ const getAllReview = async (params: any, options: any) => {
           },
         },
       },
+      Discount: true,
     },
   });
 
@@ -215,6 +216,7 @@ const getSingleReview = async (id: string) => {
           },
         },
       },
+      Discount: true,
     },
   });
 
@@ -464,8 +466,6 @@ const discountReview = async (userId: string, data: Discount) => {
     return result;
   });
 };
-
-
 
 export const ReviewService = {
   addReview,

@@ -8,16 +8,35 @@ import { Response } from "express";
 import { PaymentStatus } from "@prisma/client";
 
 const makeOrder = async (res: Response, userId: string, reviewId: string) => {
-  //   console.log({ userId, reviewId });
+  // console.log({ userId, reviewId });
+
+  let total_amount;
 
   const isReviewExist = await prisma.review.findFirst({
     where: {
       id: reviewId,
+        isPremium: true,
     },
   });
 
   if (!isReviewExist) {
     throw new AppError(status.NOT_FOUND, "Review not found!");
+  }
+
+  // console.log(isReviewExist);
+
+  const isDiscountExist = await prisma.discount.findUnique({
+    where: {
+      reviewId: isReviewExist.id,
+    },
+  });
+
+  // console.log(isDiscountExist);
+
+  if (isDiscountExist) {
+    total_amount = String(isDiscountExist.newPrice);
+  } else {
+    total_amount = String(isReviewExist.price);
   }
 
   const store_id = config.store_id as string;
@@ -30,7 +49,7 @@ const makeOrder = async (res: Response, userId: string, reviewId: string) => {
   //   console.log(tran_id);
 
   const data = {
-    total_amount: String(isReviewExist.price),
+    total_amount,
     currency: "BDT",
     tran_id: tran_id, // use unique tran_id for each api call
     success_url: `${config.backend_api_link}/api/payment/success?userId=${userId}&reviewId=${isReviewExist?.id}`,
@@ -59,10 +78,6 @@ const makeOrder = async (res: Response, userId: string, reviewId: string) => {
     ship_postcode: 1000,
     ship_country: "Bangladesh",
   };
-
-  //   console.log(isReviewExist);
-
-  // console.log(data);
 
   const sslcz = new SSLCommerzPayment(store_id, store_passwd, is_live);
 
@@ -215,5 +230,5 @@ export const PaymentService = {
   successOrder,
   myPayments,
   adminDashboardInfo,
-  userDashboardInfo
+  userDashboardInfo,
 };
